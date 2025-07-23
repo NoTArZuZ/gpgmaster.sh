@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dependencies: GPG
-# GPG Bash Master by Chatoyance v1.11
+# GPG Bash Master by Chatoyance v1.12
 # Very poor codebase at the moment
 
 # USER DEFINED VARIABLES
@@ -15,7 +15,7 @@ encrypt() {
 	# [ -p ] PIPE OPTION
 		msg=$(cat); [ -z "$msg" ] && exit 1
 		recipu=$(cat $HOME/.cache/gpglastrec); [ -z "$recipu" ] && exit 1
-		outmsg=$(echo "$msg" | gpg --encrypt --armor -r $recipu)
+		outmsg=$(echo "$msg" | gpg --encrypt --armor -r $recipu) || exit 1
 		# GPG Encrypt Done
 		echo "$outmsg"
 		[ $noask ] || echo
@@ -29,7 +29,7 @@ encrypt() {
 		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
-		outmsg=$(echo "$msg" | gpg --encrypt --armor -r $recipu)
+		outmsg=$(echo "$msg" | gpg --encrypt --armor -r $recipu) || exit 1
 		# GPG Encrypt Done
 		echo "$outmsg"
 		echo "$recipu" > "$HOME/.cache/gpglastrec"
@@ -39,7 +39,7 @@ encrypt() {
 	# [ -f ] FILE ARGUMENT
 		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu; [ -z "$recipu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.gpg"
-		gpg --encrypt --armor -r $recipu --output "$outfile" "$POSITIONAL_ARGS"
+		gpg --encrypt --armor -r $recipu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Encrypt Done
 		filecontent=$(cat "$outfile")
 		echo "$recipu" > "$HOME/.cache/gpglastrec"
@@ -58,7 +58,7 @@ signencrypt() {
 		msg=$(cat); [ -z "$msg" ] && exit 1
 		recipu=$(cat $HOME/.cache/gpglastrec); [ -z "$recipu" ] && exit 1
 		localu=$(cat $HOME/.cache/gpglastloc); [ -z "$localu" ] && exit 1
-		outmsg=$(echo "$msg" | gpg -se --armor -r $recipu -u $localu)
+		outmsg=$(echo "$msg" | gpg -se --armor -r $recipu -u $localu) || exit 1
 		# GPG Sign Encrypt Done
 		echo "$outmsg"
 		[ $noask ] || echo
@@ -74,7 +74,7 @@ signencrypt() {
 		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
-		outmsg=$(echo "$msg" | gpg -se --armor -r $recipu -u $localu)
+		outmsg=$(echo "$msg" | gpg -se --armor -r $recipu -u $localu) || exit 1
 		# GPG Sign Encrypt Done
 		echo "$outmsg"
 		echo "$recipu" > "$HOME/.cache/gpglastrec"
@@ -86,9 +86,9 @@ signencrypt() {
 		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu; [ -z "$recipu" ] && exit 1
 		[ -z "$localu" ] && read -r -p "Enter Signer: " localu; [ -z "$localu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.gpg"
-		gpg -se --armor -r $recipu -u $localu --output "$outfile" "$POSITIONAL_ARGS"
+		gpg -se --armor -r $recipu -u $localu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Sign Encrypt Done
-		filecontent=$(cat "$outfile")
+		filecontent=$(cat "$outfile") || exit 1
 		echo "$recipu" > "$HOME/.cache/gpglastrec"
 		echo "$localu" > "$HOME/.cache/gpglastloc"
 		[ $noask ] || rm -i "$POSITIONAL_ARGS"
@@ -102,7 +102,7 @@ signencrypt() {
 decrypt() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 	# [ -p ] PIPE OPTION
-		msg=$(cat)
+		msg=$(cat); [ -z "$msg" ] && exit 1
 		outmsg=$(echo "$msg" | gpg --decrypt) || exit 1
 		# GPG Decrypt Done
 		echo "$outmsg"
@@ -126,12 +126,12 @@ decrypt() {
 		outfile=$(echo "${POSITIONAL_ARGS}" | sed 's/.\{4\}$//')
 		gpg --decrypt --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Decrypt Done
-		filecontent=$(cat "$outfile")
+		filecontent=$(cat "$outfile") || exit 1
 		[ $noask ] || rm -i "$POSITIONAL_ARGS"
 		[ $rmdecsource = true ] && rm "$POSITIONAL_ARGS"
 		[ $noask ] || read -r -p "Copy/Open/Exit? [c/O/n]: " topost
 		[ "$topost" = "o" ] || [ "$topost" = "O" ] || [ -z "$topost" ] && ( xdg-open "$outfile" )
-		[ "$topost" = "c" ] || [ "$topost" = "c" ] && ( echo "$filecontent" | xclip -r -sel c )
+		[ "$topost" = "c" ] || [ "$topost" = "C" ] && ( echo "$filecontent" | xclip -r -sel c )
 		[ $noask ] || rm -i "$outfile"
 		[ $rmdecoutput = true ] && rm "$outfile"
 	fi
@@ -142,7 +142,7 @@ clearsign() {
 	# [ -p ] PIPE OPTION
 		msg=$(cat); [ -z "$msg" ] && exit 1
 		localu=$(cat $HOME/.cache/gpglastloc); [ -z "$localu" ] && exit 1
-		outmsg=$(echo "$msg" | gpg --clear-sign -u $localu)
+		outmsg=$(echo "$msg" | gpg --clear-sign -u $localu) || exit 1
 		# GPG Sign Done
 		echo "$outmsg"
 		[ $noask ] || echo
@@ -157,7 +157,7 @@ clearsign() {
 		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
-		outmsg=$(echo "$msg" | gpg --clear-sign -u $localu)
+		outmsg=$(echo "$msg" | gpg --clear-sign -u $localu) || exit 1
 		# GPG Sign Done
 		echo "$outmsg"
 		echo "$localu" > "$HOME/.cache/gpglastloc"
@@ -167,9 +167,9 @@ clearsign() {
 	# [ -f ] FILE ARGUMENT
 		[ -z "$localu" ] && read -r -p "Enter Signer(s): " localu; [ -z "$localu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.asc"
-		gpg --sign -u $localu --output "$outfile" "$POSITIONAL_ARGS"
+		gpg --sign -u $localu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Sign Done
-		filecontent=$(cat "$outfile")
+		filecontent=$(cat "$outfile") || exit 1
 		echo "$localu" > "$HOME/.cache/gpglastloc"
 		[ $noask ] || rm -i "$POSITIONAL_ARGS"
 		[ $rmencsource = true ] && rm "$POSITIONAL_ARGS"
@@ -183,7 +183,7 @@ detachsign() {
 	# [ -p ] PIPE OPTION
 		msg=$(cat); [ -z "$msg" ] && exit 1
 		localu=$(cat $HOME/.cache/gpglastloc); [ -z "$localu" ] && exit 1
-		outmsg=$(echo "$msg" | gpg --detach-sign --armor -u $localu)
+		outmsg=$(echo "$msg" | gpg --detach-sign --armor -u $localu) || exit 1
 		# GPG Detach Sign Done
 		echo "$msg" > "$HOME/signed-text-$(date '+%N')"
 		echo "$outmsg" > "$HOME/signed-text-$(date '+%N').asc"
@@ -198,7 +198,7 @@ detachsign() {
 		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
-		outmsg=$(echo "$msg" | gpg --detach-sign --armor -u $localu)
+		outmsg=$(echo "$msg" | gpg --detach-sign --armor -u $localu) || exit 1
 		# GPG Detach Sign Done
 		echo "$localu" > "$HOME/.cache/gpglastloc"
 		outdir="$HOME/" # default when noask
@@ -211,10 +211,10 @@ detachsign() {
 	# [ -f ] FILE ARGUMENT
 		[ -z "$localu" ] && read -r -p "Enter Signer(s): " localu; [ -z "$localu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.asc"
-		gpg --detach-sign --armor -u $localu --output "$outfile" "$POSITIONAL_ARGS"
+		gpg --detach-sign --armor -u $localu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Detach Sign Done
+		filecontent=$(cat "$outfile") || exit 1
 		echo "$localu" > "$HOME/.cache/gpglastloc"
-		filecontent=$(cat "$outfile")
 		[ $noask ] || read -r -p "Copy Sign Content? [y/N]: " topost
 		[ "$topost" = "y" ] || [ "$topost" = "Y" ] && ( echo "$filecontent" | xclip -r -sel c )
 	fi
@@ -244,7 +244,7 @@ verifysign() {
 
 # Helper Functions
 helpmsg() {
-	echo -e "GPG Bash Master by Chatoyance v1.11 \
+	echo -e "GPG Bash Master by Chatoyance v1.12 \
 	\nOpen an issue here: https://github.com/NoTArZuZ/gpgmaster.sh/issues \
 	\n \
 	\n[-l] - Use last recipient/signer [-n] - Don't ask anything [-p] - Pipe input \
