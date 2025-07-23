@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 # Dependencies: GPG
-# GPG Bash Master by Chatoyance v1.1
+# GPG Bash Master by Chatoyance v1.11
 # Very poor codebase at the moment
 
 # USER DEFINED VARIABLES
-rmencsource=false
-rmdecsource=false
-rmdecoutput=false
-
-POSITIONAL_ARGS=()
+rmencsource=false # Remove the source file before encryption
+rmdecsource=false # Remove the source file before decryption
+rmdecoutput=false # Remove the file after decryption
 
 # Main Functions
+POSITIONAL_ARGS=()
 encrypt() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 	# [ -p ] PIPE OPTION
@@ -127,11 +126,12 @@ decrypt() {
 		outfile=$(echo "${POSITIONAL_ARGS}" | sed 's/.\{4\}$//')
 		gpg --decrypt --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Decrypt Done
+		filecontent=$(cat "$outfile")
 		[ $noask ] || rm -i "$POSITIONAL_ARGS"
 		[ $rmdecsource = true ] && rm "$POSITIONAL_ARGS"
 		[ $noask ] || read -r -p "Copy/Open/Exit? [c/O/n]: " topost
 		[ "$topost" = "o" ] || [ "$topost" = "O" ] || [ -z "$topost" ] && ( xdg-open "$outfile" )
-		[ "$topost" = "c" ] || [ "$topost" = "c" ] && ( xdg-open "$outfile" )
+		[ "$topost" = "c" ] || [ "$topost" = "c" ] && ( echo "$filecontent" | xclip -r -sel c )
 		[ $noask ] || rm -i "$outfile"
 		[ $rmdecoutput = true ] && rm "$outfile"
 	fi
@@ -243,12 +243,8 @@ verifysign() {
 }
 
 # Helper Functions
-getlastkey() {
-	recipu=$(cat $HOME/.cache/gpglastrec)
-	localu=$(cat $HOME/.cache/gpglastloc)
-}
 helpmsg() {
-	echo -e "GPG Bash Master by Chatoyance v1.1 \
+	echo -e "GPG Bash Master by Chatoyance v1.11 \
 	\nOpen an issue here: https://github.com/NoTArZuZ/gpgmaster.sh/issues \
 	\n \
 	\n[-l] - Use last recipient/signer [-n] - Don't ask anything [-p] - Pipe input \
@@ -292,18 +288,18 @@ set -- "${POSITIONAL_ARGS[@]}"
 
 # Flag check
 [ $singleflag = 1 ] || exit 1
-[ $getlast ] && getlastkey
+[ $getlast ] && recipu=$(cat $HOME/.cache/gpglastrec) && localu=$(cat $HOME/.cache/gpglastloc)
 
 # Functions Static Variables
 filefmt=$(echo "$POSITIONAL_ARGS" | rev | cut -b -4 | rev)
 
 # Main Program
-if [ $encryptor ]; then encrypt;
-elif [ $signcryptor ]; then signencrypt;
-elif [ $decryptor ]; then decrypt;
-elif [ $signer ]; then clearsign;
-elif [ $detacher ]; then detachsign;
-elif [ $verifier ]; then verifysign;
-fi
+[ $encryptor ] && encrypt;
+[ $signcryptor ] && signencrypt;
+[ $decryptor ] && decrypt;
+[ $signer ] && clearsign;
+[ $detacher ] && detachsign;
+[ $verifier ] && verifysign;
+
 
 [ -z "$POSITIONAL_ARGS" ] && helpmsg
