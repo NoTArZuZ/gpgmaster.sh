@@ -14,24 +14,22 @@ singleflag=0
 encrypt() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -p ] PIPE OPTION
-		msg=$(cat)
-		[ -z "$msg" ] && exit 1
-		recipu=$(cat $HOME/.cache/gpglastrec)
-		[ -z "$recipu" ] && exit 1
+		msg=$(cat); [ -z "$msg" ] && exit 1
+		recipu=$(cat $HOME/.cache/gpglastrec); [ -z "$recipu" ] && exit 1
 		outmsg=$(echo "$msg" | gpg --encrypt --armor -r $recipu) || exit 1
 		# GPG Encrypt Done
 		echo "$outmsg"
-		[ $noask ] || echo
-		[ $noask ] || echo ">> Used keys: $recipu"
-		[ $noask ] || echo ">> Copied Message to Clipboard"
+		[ $noask ] || {
+			echo
+			echo ">> Used keys: $recipu"
+			echo ">> Copied Message to Clipboard"
+		}
 		echo "$outmsg" | xclip -r -sel c
 	elif [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -z ] NO ARGUMENT
-		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu
-		[ -z "$recipu" ] && exit 1
+		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu; [ -z "$recipu" ] && exit 1
 		tempfile="/tmp/tmpencmsg-$(date '+%N')"
-		$EDITOR "$tempfile"
-		[ -s "$tempfile" ] || exit 1
+		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
 		outmsg=$(echo "$msg" | gpg --encrypt --armor -r $recipu) || exit 1
@@ -42,8 +40,7 @@ encrypt() {
 		[ "$topost" = "y" ] || [ "$topost" = "Y" ] || [ -z "$topost" ] && (echo "$outmsg" | xclip -r -sel c)
 	elif [ -n "$POSITIONAL_ARGS" ] && [ -f "$POSITIONAL_ARGS" ]; then
 		# [ -f ] FILE ARGUMENT
-		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu
-		[ -z "$recipu" ] && exit 1
+		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu; [ -z "$recipu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.gpg"
 		gpg --encrypt --armor -r $recipu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Encrypt Done
@@ -61,29 +58,25 @@ encrypt() {
 signencrypt() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -p ] PIPE OPTION
-		msg=$(cat)
-		[ -z "$msg" ] && exit 1
-		recipu=$(cat $HOME/.cache/gpglastrec)
-		[ -z "$recipu" ] && exit 1
-		localu=$(cat $HOME/.cache/gpglastloc)
-		[ -z "$localu" ] && exit 1
+		msg=$(cat); [ -z "$msg" ] && exit 1
+		recipu=$(cat $HOME/.cache/gpglastrec); [ -z "$recipu" ] && exit 1
+		localu=$(cat $HOME/.cache/gpglastloc); [ -z "$localu" ] && exit 1
 		outmsg=$(echo "$msg" | gpg -se --armor -r $recipu -u $localu) || exit 1
 		# GPG Sign Encrypt Done
 		echo "$outmsg"
-		[ $noask ] || echo
-		[ $noask ] || echo ">> Recipient keys: $recipu"
-		[ $noask ] || echo ">> Signer keys: $localu"
-		[ $noask ] || echo ">> Copied Message to Clipboard"
+		[ $noask ] || {
+			echo
+			echo ">> Recipient keys: $recipu"
+			echo ">> Signer keys: $localu"
+			echo ">> Copied Message to Clipboard"
+		}
 		echo "$outmsg" | xclip -r -sel c
 	elif [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -z ] NO ARGUMENT
-		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu
-		[ -z "$recipu" ] && exit 1
-		[ -z "$localu" ] && read -r -p "Enter Signer: " localu
-		[ -z "$localu" ] && exit 1
+		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu; [ -z "$recipu" ] && exit 1
+		[ -z "$localu" ] && read -r -p "Enter Signer: " localu; [ -z "$localu" ] && exit 1
 		tempfile="/tmp/tmpencmsg-$(date '+%N')"
-		$EDITOR "$tempfile"
-		[ -s "$tempfile" ] || exit 1
+		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
 		outmsg=$(echo "$msg" | gpg -se --armor -r $recipu -u $localu) || exit 1
@@ -95,10 +88,8 @@ signencrypt() {
 		[ "$topost" = "y" ] || [ "$topost" = "Y" ] || [ -z "$topost" ] && (echo "$outmsg" | xclip -r -sel c)
 	elif [ -n "$POSITIONAL_ARGS" ] && [ -f "$POSITIONAL_ARGS" ]; then
 		# [ -f ] FILE ARGUMENT
-		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu
-		[ -z "$recipu" ] && exit 1
-		[ -z "$localu" ] && read -r -p "Enter Signer: " localu
-		[ -z "$localu" ] && exit 1
+		[ -z "$recipu" ] && read -r -p "Enter Recipient(s): " recipu; [ -z "$recipu" ] && exit 1
+		[ -z "$localu" ] && read -r -p "Enter Signer: " localu; [ -z "$localu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.gpg"
 		gpg -se --armor -r $recipu -u $localu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Sign Encrypt Done
@@ -116,20 +107,20 @@ signencrypt() {
 decrypt() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -p ] PIPE OPTION
-		msg=$(cat)
-		[ -z "$msg" ] && exit 1
+		msg=$(cat); [ -z "$msg" ] && exit 1
 		outmsg=$(echo "$msg" | gpg --decrypt) || exit 1
 		# GPG Decrypt Done
 		echo "$outmsg"
-		[ $noask ] || echo
-		[ $noask ] || echo ">> Launching EDITOR..."
-		[ $noask ] || echo "$outmsg" | $EDITOR
+		[ $noask ] || {
+			echo
+			echo ">> Launching EDITOR..."
+			echo "$outmsg" | $EDITOR
+		}
 		exit 0
 	elif [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -z ] NO ARGUMENT
 		tempfile="/tmp/tmpdecmsg-$(date '+%N')"
-		$EDITOR "$tempfile"
-		[ -s "$tempfile" ] || exit 1
+		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		outmsg=$(cat "$tempfile" | gpg --decrypt) || exit 1
 		# GPG Decrypt Done
 		rm -f "$tempfile"
@@ -143,38 +134,34 @@ decrypt() {
 		gpg --decrypt --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Decrypt Done
 		filecontent=$(cat "$outfile") || exit 1
-		[ $noask ] || rm -i "$POSITIONAL_ARGS"
-		[ $rmdecsource = true ] && rm "$POSITIONAL_ARGS"
+		[ $noask ] || rm -i "$POSITIONAL_ARGS"; [ $rmdecsource = true ] && rm "$POSITIONAL_ARGS"
 		[ $noask ] || read -r -p "Copy/Open/Exit? [c/O/n]: " topost
 		[ "$topost" = "o" ] || [ "$topost" = "O" ] || [ -z "$topost" ] && (xdg-open "$outfile")
 		[ "$topost" = "c" ] || [ "$topost" = "C" ] && (echo "$filecontent" | xclip -r -sel c)
-		[ $noask ] || rm -i "$outfile"
-		[ $rmdecoutput = true ] && rm "$outfile"
+		[ $noask ] || rm -i "$outfile"; [ $rmdecoutput = true ] && rm "$outfile"
 	fi
 	exit 0
 }
 clearsign() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -p ] PIPE OPTION
-		msg=$(cat)
-		[ -z "$msg" ] && exit 1
-		localu=$(cat $HOME/.cache/gpglastloc)
-		[ -z "$localu" ] && exit 1
+		msg=$(cat); [ -z "$msg" ] && exit 1
+		localu=$(cat $HOME/.cache/gpglastloc); [ -z "$localu" ] && exit 1
 		outmsg=$(echo "$msg" | gpg --clear-sign -u $localu) || exit 1
 		# GPG Sign Done
 		echo "$outmsg"
-		[ $noask ] || echo
-		[ $noask ] || echo ">> Used keys: $localu"
-		[ $noask ] || echo ">> Copied Message to Clipboard"
+		[ $noask ] || {
+			echo
+			echo ">> Used keys: $localu"
+			echo ">> Copied Message to Clipboard"
+		}
 		echo "$outmsg" | xclip -r -sel c
 		exit 0
 	elif [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -z ] NO ARGUMENT
-		[ -z "$localu" ] && read -r -p "Enter Signer: " localu
-		[ -z "$localu" ] && exit 1
+		[ -z "$localu" ] && read -r -p "Enter Signer: " localu; [ -z "$localu" ] && exit 1
 		tempfile="/tmp/tmpsignmsg-$(date '+%N')"
-		$EDITOR "$tempfile"
-		[ -s "$tempfile" ] || exit 1
+		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
 		outmsg=$(echo "$msg" | gpg --clear-sign -u $localu) || exit 1
@@ -185,15 +172,13 @@ clearsign() {
 		[ "$topost" = "y" ] || [ "$topost" = "Y" ] || [ -z "$topost" ] && (echo "$outmsg" | xclip -r -sel c)
 	elif [ -n "$POSITIONAL_ARGS" ] && [ -f "$POSITIONAL_ARGS" ]; then
 		# [ -f ] FILE ARGUMENT
-		[ -z "$localu" ] && read -r -p "Enter Signer(s): " localu
-		[ -z "$localu" ] && exit 1
+		[ -z "$localu" ] && read -r -p "Enter Signer(s): " localu; [ -z "$localu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.asc"
 		gpg --sign -u $localu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Sign Done
 		filecontent=$(cat "$outfile") || exit 1
 		echo "$localu" >"$HOME/.cache/gpglastloc"
-		[ $noask ] || rm -i "$POSITIONAL_ARGS"
-		[ $rmencsource = true ] && rm "$POSITIONAL_ARGS"
+		[ $noask ] || rm -i "$POSITIONAL_ARGS"; [ $rmencsource = true ] && rm "$POSITIONAL_ARGS"
 		[ $noask ] || read -r -p "Copy File Content? [y/N]: " topost
 		[ "$topost" = "y" ] || [ "$topost" = "Y" ] && (echo "$filecontent" | xclip -r -sel c)
 	fi
@@ -202,25 +187,23 @@ clearsign() {
 detachsign() {
 	if [ $topipe ] && [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -p ] PIPE OPTION
-		msg=$(cat)
-		[ -z "$msg" ] && exit 1
-		localu=$(cat $HOME/.cache/gpglastloc)
-		[ -z "$localu" ] && exit 1
+		msg=$(cat); [ -z "$msg" ] && exit 1
+		localu=$(cat $HOME/.cache/gpglastloc); [ -z "$localu" ] && exit 1
 		outmsg=$(echo "$msg" | gpg --detach-sign --armor -u $localu) || exit 1
 		# GPG Detach Sign Done
 		echo "$msg" >"$HOME/signed-text-$(date '+%N')"
 		echo "$outmsg" >"$HOME/signed-text-$(date '+%N').asc"
-		[ $noask ] || echo
-		[ $noask ] || echo ">> Used keys: $localu"
-		[ $noask ] || echo ">> Saved to User's Home as signed-text-NANOSECOND"
+		[ $noask ] || {
+			echo
+			echo ">> Used keys: $localu"
+			echo ">> Saved to User's Home as signed-text-NANOSECOND"
+		}
 		exit 0
 	elif [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -z ] NO ARGUMENT
-		[ -z "$localu" ] && read -r -p "Enter Signer: " localu
-		[ -z "$localu" ] && exit 1
+		[ -z "$localu" ] && read -r -p "Enter Signer: " localu; [ -z "$localu" ] && exit 1
 		tempfile="/tmp/tmpsignmsg-$(date '+%N')"
-		$EDITOR "$tempfile"
-		[ -s "$tempfile" ] || exit 1
+		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		rm -f "$tempfile"
 		outmsg=$(echo "$msg" | gpg --detach-sign --armor -u $localu) || exit 1
@@ -228,15 +211,16 @@ detachsign() {
 		echo "$localu" >"$HOME/.cache/gpglastloc"
 		outdir="$HOME/" # default when noask
 		outfile="signed-text-$(date '+%N')"
-		[ $noask ] || read -r -p "Absolute directory Path (/ on end): " outdir
-		[ $noask ] || read -r -p "Saved Filename: " outfile
+		[ $noask ] || {
+			read -r -p "Absolute directory Path (/ on end): " outdir
+			read -r -p "Saved Filename: " outfile
+		}
 		[ -z "$outfile" ] || [ -f "$outfile" ] && exit 1
 		echo "$msg" >"${outdir}${outfile}"
 		echo "$outmsg" >"${outdir}${outfile}.asc"
 	elif [ -n "$POSITIONAL_ARGS" ] && [ -f "$POSITIONAL_ARGS" ]; then
 		# [ -f ] FILE ARGUMENT
-		[ -z "$localu" ] && read -r -p "Enter Signer(s): " localu
-		[ -z "$localu" ] && exit 1
+		[ -z "$localu" ] && read -r -p "Enter Signer(s): " localu; [ -z "$localu" ] && exit 1
 		outfile="${POSITIONAL_ARGS}.asc"
 		gpg --detach-sign --armor -u $localu --output "$outfile" "$POSITIONAL_ARGS" || exit 1
 		# GPG Detach Sign Done
@@ -250,15 +234,13 @@ detachsign() {
 verifysign() {
 	if [ $topipe ]; then
 		# [ -p ] PIPE OPTION
-		msg=$(cat)
-		[ -z "$msg" ] && exit 1
+		msg=$(cat); [ -z "$msg" ] && exit 1
 		(echo "$msg" | gpg --verify) || exit 1
 		exit 0
 	elif [ -z "$POSITIONAL_ARGS" ]; then
 		# [ -z ] NO ARGUMENT
 		tempfile="/tmp/tmpvrfmsg-$(date '+%N')"
-		$EDITOR "$tempfile"
-		[ -s "$tempfile" ] || exit 1
+		$EDITOR "$tempfile"; [ -s "$tempfile" ] || exit 1
 		msg=$(cat "$tempfile")
 		(echo "$msg" | gpg --verify) || exit 1
 		[ $noask ] || read -r -p "Press Enter to continue... "
@@ -287,45 +269,36 @@ helpmsg() {
 # Get Arguments
 while [[ $# -gt 0 ]]; do
 	case $1 in
-	-l | --last)
-		getlast=true
+	-l | --last) getlast=true
 		shift
 		;;
-	-p | --pipe)
-		topipe=true
+	-p | --pipe) topipe=true
 		shift
 		;;
-	-n | --noask)
-		noask=true
+	-n | --noask) noask=true
 		shift
 		;;
-	-e | --encrypt)
-		encryptor=true
+	-e | --encrypt) encryptor=true
 		((singleflag += 1))
 		shift
 		;;
-	-c | --sign-encrypt)
-		signcryptor=true
+	-c | --sign-encrypt) signcryptor=true
 		((singleflag += 1))
 		shift
 		;;
-	-d | --decrypt)
-		decryptor=true
+	-d | --decrypt) decryptor=true
 		((singleflag += 1))
 		shift
 		;;
-	-s | --sign)
-		signer=true
+	-s | --sign) signer=true
 		((singleflag += 1))
 		shift
 		;;
-	-u | --detach)
-		detacher=true
+	-u | --detach) detacher=true
 		((singleflag += 1))
 		shift
 		;;
-	-v | --verify)
-		verifier=true
+	-v | --verify) verifier=true
 		((singleflag += 1))
 		shift
 		;;
@@ -341,7 +314,10 @@ set -- "${POSITIONAL_ARGS[@]}"
 
 # Flag check
 [ $singleflag = 1 ] || helpmsg
-[ $getlast ] && recipu=$(cat $HOME/.cache/gpglastrec) && localu=$(cat $HOME/.cache/gpglastloc)
+[ $getlast ] && {
+	recipu=$(cat $HOME/.cache/gpglastrec);
+	localu=$(cat $HOME/.cache/gpglastloc)
+}
 
 # Functions Static Variables
 filefmt=$(echo "$POSITIONAL_ARGS" | rev | cut -b -4 | rev)
